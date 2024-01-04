@@ -259,12 +259,13 @@ public class ShareServiceImpl extends BaseService implements ShareService {
         if (CollectionUtils.isEmpty(downloadParam.getDownloadParams()) || CollectionUtils.isEmpty(downloadParam.getExecuteToken())) {
             return null;
         }
+        ShareAuthorizedToken shareAuthorizedToken = null;
         for (ViewExecuteParam param : downloadParam.getDownloadParams()) {
             Map<String, ShareToken> tokeMap = downloadParam.getExecuteToken();
             if (CollectionUtils.isEmpty(tokeMap)) {
-                validateExecutePermission(null, param);
+                shareAuthorizedToken = validateExecutePermission(null, param);
             } else {
-                validateExecutePermission(downloadParam.getExecuteToken().getOrDefault(param.getViewId(), null).getAuthorizedToken(), param);
+                shareAuthorizedToken = validateExecutePermission(downloadParam.getExecuteToken().getOrDefault(param.getViewId(), null).getAuthorizedToken(), param);
             }
         }
 
@@ -272,7 +273,7 @@ public class ShareServiceImpl extends BaseService implements ShareService {
         DownloadCreateParam downloadCreateParam = new DownloadCreateParam();
         downloadCreateParam.setFileName(downloadParam.getFileName());
         downloadCreateParam.setDownloadParams(viewExecuteParams);
-
+        securityManager.runAs(shareAuthorizedToken.getPermissionBy());
         return downloadService.submitDownloadTask(downloadCreateParam, clientId);
     }
 
